@@ -99,3 +99,15 @@ https://www.netsarang.co.kr/download/down_form.html?code=512
 ![xshell-private-key](images/xshell-private-key.png)
 ![add-xshell-private-key](images/xshell-private-key.png)
 ![access-ec2-instance-xshell](images/access-ec2-instance-xshell.png)
+
+## 4. Install httpd on Linux
+
+접근한 Linux에서 apache 설치
+```bash
+yum -y install httpd
+systemctl enable httpd
+systemctl start httpd
+echo '<html><h1>Hello From Your Web Server!</h1></html>' > /var/www/html/index.html
+```
+
+브라우져에서 EC2 `Public IPv4 address` 접속 및 페이지 확인
