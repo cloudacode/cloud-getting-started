@@ -1,6 +1,6 @@
-# AWS - Network 환경 구성
+# AWS - EC2 구축
 
-**AWS 네트워크 환경 구성 및 EC2 구축**
+**AWS 환경 구성 및 EC2 구축**
 
 이번 실습은 AWS를 통해 서비스 구성 시 가장 기반사항이 되는 VPC 구성과 EC2 구성 실습을 통해서 AWS의 기본 서비스들을 이해 하고 AWS 콘솔 활용 방법을 익히기 위함입니다. EC2로 컴퓨팅 리소스 활용 및 서비스 배포를 위한 기본 작업들을 이해 할 수 있습니다.
 
@@ -104,10 +104,14 @@ https://www.netsarang.co.kr/download/down_form.html?code=512
 
 접근한 Linux에서 apache 설치
 ```bash
-yum -y install httpd
-systemctl enable httpd
-systemctl start httpd
-echo '<html><h1>Hello From Your Web Server!</h1></html>' > /var/www/html/index.html
+sudo yum -y install httpd
+sudo systemctl enable httpd
+sudo systemctl start httpd
+```
+
+index.html 설정 `/var/www/html/index.html`
+```bash
+<html><h1>Hello EC2 Server!</h1></html>
 ```
 
 브라우져에서 EC2 `Public IPv4 address` 접속 및 페이지 확인
