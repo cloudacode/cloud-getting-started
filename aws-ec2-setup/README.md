@@ -97,7 +97,7 @@ https://www.netsarang.co.kr/download/down_form.html?code=512
 - 새로운 세션 생성 및 사용자 인증
   
 ![xshell-private-key](images/xshell-private-key.png)
-![add-xshell-private-key](images/xshell-private-key.png)
+![add-xshell-private-key](images/add-xshell-private-key.png)
 ![access-ec2-instance-xshell](images/access-ec2-instance-xshell.png)
 
 ## 4. Install httpd on Linux
