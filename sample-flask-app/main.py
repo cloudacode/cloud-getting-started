@@ -9,7 +9,11 @@ from models import Results
 from db_config import mysql
 
 # route
-@app.route('/', methods=['GET'])
+@app.route('/')
+def index_page():
+    return render_template('index.html')
+
+@app.route('/user', methods=['GET'])
 def users():
 	conn = None
 	cursor = None
@@ -52,7 +56,7 @@ def add_user():
 			cursor = conn.cursor()
 			cursor.execute(sql, data)
 			conn.commit()
-			return redirect('/')
+			return redirect('/user')
 		else:
 			return 'Error while adding user'
 	except Exception as e:
@@ -70,7 +74,7 @@ def delete_user(id):
 		cursor = conn.cursor()
 		cursor.execute("DELETE FROM cloud_user WHERE user_id=%s", (id,))
 		conn.commit()
-		return redirect('/')
+		return redirect('/user')
 	except Exception as e:
 		print(e)
 	finally:
@@ -89,4 +93,4 @@ def not_found(error=None):
 	return res
 	
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, host='0.0.0.0')
