@@ -21,7 +21,7 @@ spec:
         app: cloud-flask
     spec:
       containers:
-      - image: cloudacode/cloudflask:v1.0.3
+      - image: cloudacode/cloudflask:v1.0.4
         imagePullPolicy: Always
         name: cloud-flask
         ports:
