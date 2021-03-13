@@ -1,14 +1,3 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-spec:
-  ports:
-  - port: 3306
-  selector:
-    app: mysql
-  clusterIP: None
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +14,7 @@ spec:
         app: mysql
     spec:
       containers:
-      - image: mariadb:latest
+      - image: cloudacode/mariadb:v1.0.0
         name: mysql
         env:
           # Use secret in real usage
@@ -34,10 +23,3 @@ spec:
         ports:
         - containerPort: 3306
           name: mysql
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pv-claim
