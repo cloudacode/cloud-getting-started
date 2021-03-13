@@ -240,6 +240,14 @@ __SYNC__ 수행 후
 레포지토리 URL 이 올바르게 되어 있다면 문제 없이 sync가 완료되고 상세 페이지 역시 아래처럼 확인 가능하다 
 ![argocd-app-synced](images/argo-prometheus-synced.png) 
 
+Prometheus의 ClusterIP 확인
+
+```bash
+kubectl get svc prometheus-server
+NAME                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+prometheus-server   ClusterIP   10.100.238.196   <none>        80/TCP    5m44s
+```
+
 다시 웹 콘솔에서 __+ New App__ 클릭하여 신규 애플리케이션(Grafana) 생성
 
 - GENERAL
@@ -270,6 +278,11 @@ __Service__(화면에서는 svc grafana)
 
 
 ### Monitoring Dashboard 구성  
+
+왼쪽 텝 __Configuration__ 에서 Data Sources 선택 후 위에서 조회한 Prometheus Cluster IP를 HTTP URL로 지정
+![grafana-datasource](images/grafana-datasource.png)
+SAVE & TEST 하여 Data Source 등록
+
 
 왼쪽 텝 __+__ Import -> Upload Json File:
 `kubernetes-cluster-prometheus_rev1.json` 업로드
