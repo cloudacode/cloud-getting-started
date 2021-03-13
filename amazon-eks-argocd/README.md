@@ -37,7 +37,10 @@ $ aws sts get-caller-identity
 
 ### Install eksctl and kubectl
 
-EKS 생성을 위해 eksctl을 설치 하고 추후 kubernetes 관리를 위해 kubectl도 사전에 설치 필요: [설치 관련 링크](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
+EKS 생성을 위해 eksctl을 설치 하고 추후 kubernetes 관리를 위해 kubectl도 사전에 설치 필요: [kubectl 설치(1.18)](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/install-kubectl.html)
+
+[eksctl 설치](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/eksctl.html)
+
 
 ### Deploy EKS Cluster
 
@@ -88,7 +91,77 @@ NAME                                                STATUS   ROLES    AGE   VERS
 ip-192-168-27-236.ap-northeast-2.compute.internal   Ready    <none>   19m   v1.18.9-eks-d1db3c
 ```
 
-## 2. ArgoCD 연동
+## 2. Application 배포
+
+### Database 배포
+
+상위 디렉토리에 `cloud-db-manifest`로 이동
+
+Deploy the contents of the deployment file:
+```bash
+kubectl apply -f mysql-deployment.yaml
+```
+
+Display information about the Deployment:
+```bash
+kubectl describe deployment mysql
+```
+
+Deploy the contents of the service file:
+```bash
+kubectl apply -f mysql-service.yaml
+```
+
+배포가 정상적으로 완료가 되면 Pod 정보를 찾을수 있다
+```bash
+kubectl get pods -l app=mysql
+```
+
+Output
+```bash
+NAME                     READY   STATUS    RESTARTS   AGE
+mysql-6fd94cc949-d8lj7   1/1     Running   0          23s
+```
+
+### Flask APP 배포
+
+상위 디렉토리에 `cloud-flask-manifest`로 이동
+
+Deploy the contents of the deployment file:
+```bash
+kubectl apply -f flask-deployment.yaml
+```
+
+Display information about the Deployment:
+```bash
+kubectl describe deployment cloud-flask
+```
+
+Deploy the contents of the service file:
+```bash
+kubectl apply -f flask-service.yaml
+```
+
+배포가 정상적으로 완료가 되면 Pod 정보를 찾을수 있다
+```bash
+kubectl get pods -l app=cloud-flask
+```
+
+flask app의 경우는 Service 타입을 LB로 외부 노출을 시켰으므로 다음과 같이 LB Endpoint를 확인 가능
+```bash
+kubectl get svc cloud-flask-svc
+```
+
+Output
+```bash
+NAME              TYPE           CLUSTER-IP       EXTERNAL-IP                                                                   PORT(S)        AGE
+cloud-flask-svc   LoadBalancer   10.100.211.215   acd2f9103b9564eb3ada544282a1dee3-566651492.ap-northeast-2.elb.amazonaws.com   80:31126/TCP   101s 
+```
+
+해당 LB endpoint로 접근 하여 확인 동작 확인
+ex) http://acd2f9103b9564eb3ada544282a1dee3-566651492.ap-northeast-2.elb.amazonaws.com/user
+
+## 3. ArgoCD 연동
 
 ### ArgoCD CLI 설치
 https://argoproj.github.io/argo-cd/cli_installation/
@@ -143,36 +216,69 @@ kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut
 ![argocd-web](images/argo-web-console.png)
 
 
-### ArgoCD를 통해 App 배포
+### ArgoCD를 통해 모니터링 App(Prometheus, Grafana) 배포
 
-웹 콘솔에 접속후 __+ New App__ 클릭하여 신규 애플리케이션 생성
+웹 콘솔에 접속후 __+ New App__ 클릭하여 신규 애플리케이션(Prometheus) 생성
 
-- GENERAL>
-  - Application Name: cloud-flask 혹은 your application name
+- GENERAL
+  - Application Name: prometheus
   - Project: default
   - Sync Policy: Manual
-- SOURCE>
-  - Repo URL: 본인의 github repo 주소, e.g., https://github.com/cloudacode/cloud-getting-started
-  - Revision: main
-  - Path: 쿠버 manifest를 정의한 디렉토리, e.g.,cloud-flask-manifest
-- DESTINATION>
+- SOURCE
+  - Repo URL: https://prometheus-community.github.io/helm-charts `HELM`
+  - Chart: prometheus `13.6.0`
+- DESTINATION
   - Cluster URL: https://kubernetes.default.svc
   - Namespace: default
 
 __Create__ 진행 후
 
 화면을 새로고침 하면 다음과 같이 앱이 하나 등록 되어 Sync가 아직 되지 않은 OutOfSync 상태로 확인 된다. Sync 정책을 Manual 로 하였기 때문에 초기에 OutOfSync 상태는 정상 이다.
-![argocd-app-creation](images/argo-app-creation.png) 
 
 __SYNC__ 수행 후
 
 레포지토리 URL 이 올바르게 되어 있다면 문제 없이 sync가 완료되고 상세 페이지 역시 아래처럼 확인 가능하다 
-![argocd-app-synced](images/argo-app-synced.png) 
+![argocd-app-synced](images/argo-prometheus-synced.png) 
 
-__Service__(화면에서는 cloud-flask-svc)
+다시 웹 콘솔에서 __+ New App__ 클릭하여 신규 애플리케이션(Grafana) 생성
 
-를 선택하면 Hostnames 항목에 앱에 접속 가능한 LB URL이 생성 되었으며 웹 브라우져로 접속후 정상적으로 앱이 기동 되었는지 확인
-![argocd-app-checked](images/argo-app-checked.png) 
+- GENERAL
+  - Application Name: grafana
+  - Project: default
+  - Sync Policy: Manual
+- SOURCE
+  - Repo URL: https://grafana.github.io/helm-charts `HELM`
+  - Chart: prometheus `6.6.2`
+- DESTINATION
+  - Cluster URL: https://kubernetes.default.svc
+  - Namespace: default
+
+아래 HELM 변수값 탭에서 `service.type` 검색 후 값을 `LoadBalancer` 로 변경
+![grafana-service-type](images/grafana-helm-servicetype.png)
+
+__Create__ 와 __SYNC__ 수행 후 정상적으로 애플리케이션이 만들어졌다면 admin password를 조회
+
+```bash
+kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+
+Endpoint 확인을 위해 ArgoCD 화면에서 Grafana 선택후 상세페이지
+__Service__(화면에서는 svc grafana)
+
+를 선택하면 Hostnames 항목에 앱에 접속 가능한 LB URL이 생성 되었으며 웹 브라우져로 접속후 정상적으로 Grafana가 기동 되었는지 확인
+![grafana-dashboard](images/grafana-dashboard.png)
+
+
+### Monitoring Dashboard 구성  
+
+왼쪽 텝 __+__ Import -> Upload Json File:
+`kubernetes-cluster-prometheus_rev1.json` 업로드
+
+Options
+  - prometheus: `Promethesus`
+
+아래처럼 리소스에 대한 모니터링 대쉬보드 확인
+![K8S Dashboard](images/grafana-k8s-dashboard.png)
 
 
 ## Clean Up
