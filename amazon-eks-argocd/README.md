@@ -205,8 +205,10 @@ kubectl get -n argocd svc argocd-server --output jsonpath='{.status.loadBalancer
 
 초기 `admin` 패스워드 확인 
 ```bash
-kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
+https://argoproj.github.io/argo-cd/getting_started/#4-login-using-the-cli
+
 
 브라우저를 통해 LB Endpoint 에 접속
 
